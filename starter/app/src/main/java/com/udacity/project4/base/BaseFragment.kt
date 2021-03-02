@@ -9,7 +9,9 @@ import com.google.android.material.snackbar.Snackbar
 /**
  * Base Fragment to observe on the common LiveData objects
  */
-abstract class BaseFragment : Fragment() {
+abstract class
+
+BaseFragment : Fragment() {
     /**
      * Every fragment has to have an instance of a view model that extends from the BaseViewModel
      */
