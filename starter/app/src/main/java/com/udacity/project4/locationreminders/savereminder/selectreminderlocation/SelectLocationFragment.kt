@@ -39,16 +39,15 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import org.koin.android.ext.android.inject
+import java.util.*
 
-class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
+class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
 
     //Use Koin to get the view model of the SaveReminder
     override val _viewModel: SaveReminderViewModel by inject()
     private lateinit var binding: FragmentSelectLocationBinding
     private lateinit var map: GoogleMap
     private val TAG = SelectLocationFragment::class.java.simpleName
-
-    val selectLocation = MutableLiveData<PointOfInterest>()
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
@@ -76,7 +75,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
 //        TODO: call this function after the user confirms on the selected location
-        onLocationSelected()
+        binding.saveButton.setOnClickListener { onLocationSelected() }
+
+
         return binding.root
     }
 
@@ -84,6 +85,17 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
         //        TODO: When the user confirms on the selected location,
         //         send back the selected location details to the view model
         //         and navigate back to the previous fragment to save the reminder and add the geofence
+        if (null != _viewModel.selectedPOI.value) {
+            _viewModel.selectedPOI.value?.let {
+                _viewModel.reminderSelectedLocationStr.value = it.name
+                _viewModel.latitude.value = it.latLng.latitude
+                _viewModel.longitude.value = it.latLng.longitude
+                _viewModel.navigationCommand.value = NavigationCommand.Back
+            }
+        } else {
+            _viewModel.showToast.value = "Please select location"
+        }
+
     }
 
 
@@ -116,29 +128,19 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
             map = googleMap
         }
 
-        //These coordinates represent the latitude and longitude of the Googleplex.
-        val latitude = 37.422160
-        val longitude = -122.084270
-        //1: World
-        //5: Landmass/continent
-        //10: City
-        //15: Streets
-        //20: Buildings
-        val zoomLevel = 1f
-        val homeLatLng = LatLng(latitude, longitude)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLatLng, zoomLevel))
-
+        setMapClick(map)
         setPoiClick(map)
         setMapStyle(map)
 
-
         _viewModel.selectedPOI.observe(this, Observer {
-            map.clear()
-            val poiMarker = map.addMarker(
-                MarkerOptions()
-                    .position(it.latLng)
-                    .title(it.name)
-            )
+            it?.let {
+                map.clear()
+                val poiMarker = map.addMarker(
+                    MarkerOptions()
+                        .position(it.latLng)
+                        .title(it.name)
+                )
+            }
         })
 
         checkPermissions()
@@ -147,7 +149,25 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
 
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
+            Log.d(TAG, "setOnPoiClickListener")
             _viewModel.selectedPOI.value = poi
+            binding.saveButton.isEnabled = true
+            Log.d(TAG, poi.toString())
+        }
+    }
+
+    private fun setMapClick(map: GoogleMap) {
+        map.setOnMapClickListener { latLng ->
+            Log.d(TAG, "setOnMapClickListener")
+            val snippet = String.format(
+                Locale.getDefault(),
+                "Lat: %1$.5f, Long: %2$.5f",
+                latLng.latitude,
+                latLng.longitude
+            )
+            Log.d(TAG, snippet)
+            _viewModel.selectedPOI.value = PointOfInterest(latLng, null, snippet)
+            binding.saveButton.isEnabled = true
         }
     }
 
@@ -174,8 +194,10 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
     private fun foregroundAndBackgroundLocationPermissionApproved(): Boolean {
         val foregroundLocationApproved = (
                 PackageManager.PERMISSION_GRANTED ==
-                        ActivityCompat.checkSelfPermission(requireActivity(),
-                            Manifest.permission.ACCESS_FINE_LOCATION))
+                        ActivityCompat.checkSelfPermission(
+                            requireActivity(),
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ))
         val backgroundPermissionApproved =
             if (runningQOrLater) {
                 PackageManager.PERMISSION_GRANTED ==
@@ -188,7 +210,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
         return foregroundLocationApproved && backgroundPermissionApproved
     }
 
-    @TargetApi(29 )
+    @TargetApi(29)
     private fun requestForegroundAndBackgroundLocationPermissions() {
         if (foregroundAndBackgroundLocationPermissionApproved())
             return
@@ -289,7 +311,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
         }
         locationSettingsResponseTask.addOnCompleteListener {
             if (it.isSuccessful) {
-               loadCurrentLocation()
+                loadCurrentLocation()
             }
         }
     }
@@ -299,7 +321,7 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback  {
         if (foregroundAndBackgroundLocationPermissionApproved()) {
             map.isMyLocationEnabled = true
             fusedLocationClient.lastLocation
-                .addOnSuccessListener { location : Location? ->
+                .addOnSuccessListener { location: Location? ->
                     // Got last known location. In some rare situations this can be null.
                     location?.let {
                         val currentLocation = LatLng(it.latitude, it.longitude)

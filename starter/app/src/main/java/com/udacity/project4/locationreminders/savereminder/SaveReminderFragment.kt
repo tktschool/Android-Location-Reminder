@@ -53,7 +53,7 @@ class SaveReminderFragment : BaseFragment() {
 
     companion object {
         internal const val ACTION_GEOFENCE_EVENT =
-            "HuntMainActivity.treasureHunt.action.ACTION_GEOFENCE_EVENT"
+            "SaveReminderFragment.ACTION_GEOFENCE_EVENT"
     }
 
     override fun onCreateView(
