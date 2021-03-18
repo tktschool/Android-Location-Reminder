@@ -67,14 +67,14 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
         setHasOptionsMenu(true)
         setDisplayHomeAsUpEnabled(true)
 
-//        TODO: add the map setup implementation
-//        TODO: zoom to the user location after taking his permission
-//        TODO: add style to the map
-//        TODO: put a marker to location that the user selected
+//       add the map setup implementation
+//       zoom to the user location after taking his permission
+//       Tadd style to the map
+//       put a marker to location that the user selected
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
-//        TODO: call this function after the user confirms on the selected location
+//       call this function after the user confirms on the selected location
         binding.saveButton.setOnClickListener { onLocationSelected() }
 
 
@@ -82,9 +82,9 @@ class SelectLocationFragment : BaseFragment(), OnMapReadyCallback {
     }
 
     private fun onLocationSelected() {
-        //        TODO: When the user confirms on the selected location,
-        //         send back the selected location details to the view model
-        //         and navigate back to the previous fragment to save the reminder and add the geofence
+        // When the user confirms on the selected location,
+        // send back the selected location details to the view model
+        // and navigate back to the previous fragment to save the reminder and add the geofence
         if (null != _viewModel.selectedPOI.value) {
             _viewModel.selectedPOI.value?.let {
                 _viewModel.reminderSelectedLocationStr.value = it.name

@@ -25,7 +25,7 @@ class GeofenceBroadcastReceiver : BroadcastReceiver() {
     private val TAG = GeofenceBroadcastReceiver::class.java.simpleName
     override fun onReceive(context: Context, intent: Intent) {
 
-//TODO: implement the onReceive method to receive the geofencing events at the background
+// implement the onReceive method to receive the geofencing events at the background
         if (intent.action == SaveReminderFragment.ACTION_GEOFENCE_EVENT) {
             val geofencingEvent = GeofencingEvent.fromIntent(intent)
             Log.d(TAG, geofencingEvent.triggeringGeofences.toString())
