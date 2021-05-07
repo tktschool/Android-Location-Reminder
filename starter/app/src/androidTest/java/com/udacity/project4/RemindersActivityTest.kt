@@ -37,13 +37,14 @@ import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.test.AutoCloseKoinTest
+import org.koin.test.KoinTest
 import org.koin.test.get
 import org.koin.test.inject
 
 @RunWith(AndroidJUnit4::class)
 @LargeTest
 class RemindersActivityTest :
-    AutoCloseKoinTest() {
+    KoinTest {
 
     private lateinit var repository: ReminderDataSource
     private lateinit var appContext: Application
@@ -102,13 +103,9 @@ class RemindersActivityTest :
         IdlingRegistry.getInstance().unregister(dataBindingIdlingResource)
     }
 
-    @After
-    fun stop() {
-        stopKoin()
-    }
 
     @Test
-    fun addReminder_validateItInTheList() {
+    fun createReminder_saveAndDisplay() = runBlocking {
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(activityScenario)
 
@@ -117,33 +114,28 @@ class RemindersActivityTest :
             repository.deleteAllReminders()
         }
 
-        activityScenario.close()
-    }
+        onView(withId(R.id.noDataTextView)).check(
+            ViewAssertions.matches(
+                ViewMatchers.withEffectiveVisibility(
+                    ViewMatchers.Visibility.VISIBLE
+                )
+            )
+        )
+        onView(withId(R.id.addReminderFAB)).perform(ViewActions.click())
 
-    @Test
-    fun addReminderWithoutTitle_validateError() {
-        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
-        dataBindingIdlingResource.monitorActivity(activityScenario)
-
-        //clear the data to start fresh
+        onView(withId(R.id.selectLocation)).perform(ViewActions.click())
+        onView(withId(R.id.map)).perform(ViewActions.click())
         runBlocking {
-            repository.deleteAllReminders()
+            delay(2000)
         }
+        onView(withId(R.id.save_button)).perform(ViewActions.click())
+        onView(withId(R.id.reminderTitle)).perform(ViewActions.typeText("Title"))
+        onView(withId(R.id.reminderDescription)).perform(ViewActions.typeText("Description"))
+        closeSoftKeyboard()
+        onView(withId(R.id.saveReminder)).perform(ViewActions.click())
 
-        activityScenario.close()
-    }
-
-    @Test
-    fun addReminderWithoutLocation_validateError() {
-        val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
-        dataBindingIdlingResource.monitorActivity(activityScenario)
-
-        //clear the data to start fresh
-        runBlocking {
-            repository.deleteAllReminders()
-        }
-
-
+        onView(ViewMatchers.withText("Title")).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
+        onView(ViewMatchers.withText("Description")).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
 
         activityScenario.close()
     }
