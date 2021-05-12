@@ -95,12 +95,12 @@ class SaveReminderFragment : BaseFragment() {
                 longitude
             )
 
-            // use the user entered reminder details to:
-            // 1) add a geofencing request
-            // 2) save the reminder to the local db
-            _viewModel.validateAndSaveReminder(reminderDataItem)
-            checkPermissions()
-
+            if(_viewModel.validateEnteredData(reminderDataItem)){
+                // use the user entered reminder details to:
+                // 1) add a geofencing request
+                // 2) save the reminder to the local db
+                checkPermissions()
+            }
         }
     }
 
@@ -213,7 +213,7 @@ class SaveReminderFragment : BaseFragment() {
             if (exception is ResolvableApiException && resolve) {
                 try {
                     exception.startResolutionForResult(
-                        requireActivity(),
+                        activity,
                         REQUEST_TURN_DEVICE_LOCATION_ON
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
@@ -231,7 +231,7 @@ class SaveReminderFragment : BaseFragment() {
             }
         }
         locationSettingsResponseTask.addOnCompleteListener {
-            if (it.isSuccessful) {
+            if (it.isSuccessful && !isDetached) {
                 addGeofence(reminderDataItem)
             }
         }
@@ -258,6 +258,7 @@ class SaveReminderFragment : BaseFragment() {
         geofencingClient.addGeofences(request, geofencePendingIntent)?.run {
             addOnSuccessListener {
                 Log.e("Add Geofence", geofence.requestId)
+                _viewModel.saveReminder(reminderDataItem)
             }
 
             addOnFailureListener {

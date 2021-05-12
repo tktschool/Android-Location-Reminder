@@ -106,6 +106,7 @@ class RemindersActivityTest :
 
     @Test
     fun createReminder_saveAndDisplay() = runBlocking {
+        //Allow location permission before run this test
         val activityScenario = ActivityScenario.launch(RemindersActivity::class.java)
         dataBindingIdlingResource.monitorActivity(activityScenario)
 
@@ -132,7 +133,6 @@ class RemindersActivityTest :
         onView(withId(R.id.reminderTitle)).perform(ViewActions.typeText("Title"))
         onView(withId(R.id.reminderDescription)).perform(ViewActions.typeText("Description"))
         closeSoftKeyboard()
-        onView(withId(R.id.saveReminder)).perform(ViewActions.click())
 
         onView(ViewMatchers.withText("Title")).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))
         onView(ViewMatchers.withText("Description")).check(ViewAssertions.matches(ViewMatchers.isDisplayed()))

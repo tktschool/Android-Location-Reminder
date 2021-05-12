@@ -14,7 +14,7 @@
         android:layout_height="match_parent">
         <!-- Add the map fragment for the user to select the location-->
 
-        <fragment
+        <androidx.fragment.app.FragmentContainerView
             android:id="@+id/map"
             class="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
